@@ -3,4 +3,5 @@
 
 
     <string name="SignUp">สมัครชิก</string>
+    <string name="title_activity_sign_up">SignUP</string>
 </resources>

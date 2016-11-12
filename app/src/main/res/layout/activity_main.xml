@@ -25,7 +25,7 @@
         android:layout_alignParentEnd="true">
 
         <Button
-            android:text="Yes"
+            android:text="SIGN IN"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/button2"

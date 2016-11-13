@@ -1,10 +1,12 @@
 package com.kku.mosdotcom.easykku;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.provider.MediaStore;
@@ -14,11 +16,17 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.squareup.okhttp.FormEncodingBuilder;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 
 import org.jibble.simpleftp.SimpleFTP;
 
@@ -35,6 +43,10 @@ public class SignUP extends AppCompatActivity {
             imagePathString, imageNameString;
     private Uri uri;
     private boolean aBoolean = true;
+    private String urlAddUser = "http://swiftcodingthai.com/kku/add_user_master.php";
+    private String urlImage = "http://swiftcodingthai.com/kku/Image";
+
+
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -54,6 +66,7 @@ public class SignUP extends AppCompatActivity {
         passwordEditText = (EditText) findViewById(R.id.editText);
         imageView = (ImageView) findViewById(R.id.imageView2);
         button = (Button) findViewById(R.id.button3);
+
 
 
         //SignUp Controller
@@ -83,6 +96,8 @@ public class SignUP extends AppCompatActivity {
                 } else {
                     //Choose Image OK
                     upLoadImageToServer();
+                    upLoadStringToServer();
+
 
                 }
 
@@ -109,6 +124,72 @@ public class SignUP extends AppCompatActivity {
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }   // Main Method
 
+    private void upLoadStringToServer() {
+
+        AddNewUser addNewUser = new AddNewUser(SignUP.this);
+        addNewUser.execute(urlAddUser);
+
+
+          }//upload
+
+    //create Inner Class
+    private class AddNewUser extends AsyncTask<String, Void, String> {
+
+
+        //Explicir
+        private Context context;
+
+        public AddNewUser(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            try{
+
+                OkHttpClient okHttpClient = new OkHttpClient();
+                RequestBody requestBody = new FormEncodingBuilder()
+                        .add("isAdd", "true")
+                        .add("Name", nameString)
+                        .add("Phone", phoneString)
+                        .add("User", userString)
+                        .add("Password", passwordString)
+                        .add("image", urlImage+ imageNameString)
+                        .build();
+                Request.Builder builder = new Request.Builder();
+                Request request = builder.url(params[0]).post(requestBody).build();
+                Response response = okHttpClient.newCall(request).execute();
+                return response.body().string();
+
+
+            } catch (Exception e) {
+                Log.d("13novV1", "e doIn ==> " + e.toString());
+                return null;
+            }
+
+        }   // doInBack
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            Log.d("13novV1", "Result ==>" + s);
+
+            if(Boolean.parseBoolean(s)){
+                Toast.makeText(context,"Upload Sccess", Toast.LENGTH_SHORT).show();
+                finish();
+            }else{
+                Toast.makeText(context,"Cannot Upload Sccess", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+
+        } // onPost
+
+
+    } // AddNewUser Class
+
+
+
+
     private void upLoadImageToServer() {
 
         //Check Policy
@@ -120,7 +201,7 @@ public class SignUP extends AppCompatActivity {
             SimpleFTP simpleFTP = new SimpleFTP();
             simpleFTP.connect("ftp.swiftcodingthai.com", 21, "kku@swiftcodingthai.com", "Abc12345");
             simpleFTP.bin();
-            simpleFTP.cwd("Image");
+            simpleFTP.cwd("image");
             simpleFTP.stor(new File(imageNameString));
             simpleFTP.disconnect();
 
@@ -140,7 +221,7 @@ public class SignUP extends AppCompatActivity {
         if ((requestCode == 0) && (resultCode == RESULT_OK)) {
 
             Log.d("12novV1", "Result OK");
-
+            aBoolean = false;
             //Show Image
             uri = data.getData();
             try {
